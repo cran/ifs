@@ -62,7 +62,7 @@ IFS(y, k = 5, q = 0.5, f = NULL, n = 512, maps = c("quantile",
 }
 \examples{
 library(ifs)
-library(stepfun)
+
 
 y<-rbeta(50,.5,.1)
 

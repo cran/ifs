@@ -65,7 +65,7 @@ IFS.df.FT(y, k = 2, n = 512, maps=c("quantile","wl1","wl2"))
 }
 \examples{
 library(ifs)
-library(stepfun)
+
 
 nobs <- 100
 y<-rbeta(nobs,2,4)
