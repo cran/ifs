@@ -30,7 +30,6 @@ IFS.df.FT(y, k = 2, n = 512, maps=c("quantile","wl1","wl2"))
   \item{m}{the vector of sample moments}
   \item{k}{number of iterations, default = 2}
   \item{y}{a vector of sample observations}
-  \item{f}{the starting point in the space of functions}
   \item{n}{the number of points in which to calculate the estimator}
   \item{maps}{type of affine maps}
   \item{b}{the Fourier coefficients}

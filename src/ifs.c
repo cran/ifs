@@ -77,7 +77,7 @@
 */  
 
 #include <R.h>
-#include <R_ext/Mathlib.h>
+#include <Rmath.h>
 #include <R_ext/Boolean.h>
 #include <R_ext/Rdynload.h>
 #include <Rdefines.h>
