@@ -104,7 +104,7 @@ SEXP ifs_setQF(SEXP mu, SEXP s, SEXP a, SEXP n);
 double IFS( double x, int k);
 double IFSflex( double x, int k, SEXP f, SEXP rho);
 
-Rcomplex *ifs_FT( Rcomplex *x, int k);
+Rcomplex ifs_FT( Rcomplex *x, int k);
 
 
 /* Two functions adapted from the code in man/doc/R-exts */
@@ -378,6 +378,8 @@ SEXP ifs_df_flex(SEXP x, SEXP p, SEXP s, SEXP a, SEXP k, SEXP f, SEXP rho)
    `ps' have been previously initialiazed 
    (ifs_ft does the job).   
    Author: S. M. Iacus, Jan 31st 2002
+   Fixed on Feb 22nd 2002. FT return an Rcomplex
+   instead of *Romcplex. Thanks to Brian Ripley.
    
    parameters:
    -----------
@@ -392,11 +394,7 @@ SEXP ifs_df_flex(SEXP x, SEXP p, SEXP s, SEXP a, SEXP k, SEXP f, SEXP rho)
 */
 
 
-
-/* retval cannot be a global variabile */
-/* even if R CMD check complains       */
-
-Rcomplex *FT(Rcomplex *x, int k)
+Rcomplex FT(Rcomplex *x, int k)
 {
   int i;
   Rcomplex tempval;
@@ -427,7 +425,7 @@ Rcomplex *FT(Rcomplex *x, int k)
     if(ps[i] != 0){
      y.r  = x->r * cs[i];
      y.i = 0;
-     tempval = *FT( &y , k-1);
+     tempval = FT( &y , k-1);
      a = ps[i] * cos( x->r * ca[i] );
      b = -ps[i] * sin( x->r * ca[i] );
      c = tempval.r;
@@ -437,7 +435,7 @@ Rcomplex *FT(Rcomplex *x, int k)
     }
    }
   } 
-  return( &retval ); 
+  return( retval ); 
 }
 
 
@@ -506,7 +504,7 @@ SEXP ifs_ft(SEXP x, SEXP p, SEXP s, SEXP a, SEXP k)
    
   temp.r = *ics;
   temp.i = 0;
-  *value = *FT( &temp, *kappa);
+  value[0] = FT( &temp, *kappa);
 
   UNPROTECT(6);
   return(ans);
