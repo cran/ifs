@@ -61,7 +61,7 @@ IFS <- function (y, k = 5, q = 0.5, f = NULL, n = 512, maps = c("quantile", "wl1
 
 ifs <- function(x, p, s, a, k = 5)
 {
-   val <- .Call("ifs_df",x,p,s,a,as.integer(k))
+   val <- .Call("ifs_df",x,p,s,a,as.integer(k), PACKAGE="ifs")
    val
 }
 
@@ -73,9 +73,9 @@ ifs <- function(x, p, s, a, k = 5)
 # k  : number of iterations, default = 5
 # f  : the starting function
 
-ifs.flex <- function(x, p, s, a, k = 5, f)
+ifs.flex <- function(x, p, s, a, k = 5, f = NULL)
 {
-   val <- .Call("ifs_df_flex",x,p,s,a,as.integer(k),f,new.env())
+   val <- .Call("ifs_df_flex",x,p,s,a,as.integer(k),f,new.env(), PACKAGE="ifs")
    val
 }
 
@@ -98,7 +98,7 @@ setQF <- function(m, s, a, n = 10)
  if( length(s) != (length(m)-1) )
   stop("`m', `s' and `a' not of conformable length")
 
- return( .Call("ifs_setQF",m,s,a,as.integer(n)) )
+ return( .Call("ifs_setQF",m,s,a,as.integer(n), PACKAGE="ifs") )
 
 }
 
@@ -201,7 +201,7 @@ ifs.df.FT <- function(x,b,nterms){
 
 # x : where to calculate the FT
 ifs.FT <- function(x, p, s, a, k = 2){
- .Call("ifs_ft",x,p,s,a,as.integer(k))
+ .Call("ifs_ft",x,p,s,a,as.integer(k), PACKAGE="ifs")
 }
 
 # m : number of Fourier coefficients to estimate
@@ -213,7 +213,7 @@ ifs.setup.FT <- function(m, p, s, a, k = 2, cutoff){
 
  b <- NULL
  for(i in 1:m)
-  b <- c(b, .Call("ifs_ft",i,p,s,a,as.integer(k)))
+  b <- c(b, .Call("ifs_ft",i,p,s,a,as.integer(k), PACKAGE="ifs"))
 
  if(missing(cutoff))
   nterms <- length(b)

@@ -57,8 +57,8 @@ IFS.df.FT(y, k = 2, n = 512, maps=c("quantile","wl1","wl2"))
 \author{S. M. Iacus}
 \references{
   S. M. Iacus and D. La Torre (2002)
-  \emph{On fractal distribution function estimation and applications}
-  submitted.
+  \emph{Approximating distribution functions by iterated function systems}, JAM\&DS,
+  to appear.
 }
 \seealso{
 \code{\link{ecdf}}

@@ -9,7 +9,7 @@
  parameters to be passed in \code{setQF}.
 }
 \usage{
-ifs.setup(y, maps = "quantile", qtl)
+ifs.setup(y, maps = c("quantile","wl1","wl2"), qtl)
 }
 \arguments{
   \item{y}{the vector of the sample observations}

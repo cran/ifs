@@ -28,9 +28,9 @@ setQF(m, s, a, n = 10)
  }
 \author{S. M. Iacus}
 \references{
-  S. M. Iacus and D. La Torre (2001)
-  \emph{Approximating distribution function by Iterated Function Systems.}
-  submitted.
+  S. M. Iacus and D. La Torre (2002)
+  \emph{Approximating distribution functions by iterated function systems}, JAM\&DS,
+  to appear.
 }
 \seealso{
 \code{\link{ifs}}

@@ -1,5 +1,5 @@
-ifs.FT                  IFS estimator
 ifs                     IFS estimator
+ifs.FT                  IFS estimator
 ifs.cf                  Calculates the main parameters of the IFS
                         estimators
 ifs.setup               Set up the parameters for the maps of the IFS
