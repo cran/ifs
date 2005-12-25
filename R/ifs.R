@@ -1,5 +1,5 @@
 ### file ifs/R/ifs.R
-### copyright (C) 2001-2 S. M. Iacus
+### copyright (C) 2001-5 S. M. Iacus
 
 
 
@@ -26,18 +26,18 @@ IFS <- function (y, k = 5, q = 0.5, f = NULL, n = 512, maps = c("quantile", "wl1
         q = 0.5
         warning("proportion q set to 0.5")
     }
-    parms <- ifs.setup(y, maps)
+    parms <- ifsp.w.maps(y, maps)
     nm <- parms$n
-    if (maps != "quantile") 
+    if (maps[1] != "quantile") 
         nm <- 10
 
     s <- parms$s[1:nm]
     a <- parms$a[1:nm]
     p <- rep(1/length(a), length(a))
 
-    if (maps != "quantile") {
-     QF <- setQF(parms$m, parms$s, parms$a, nm)
-     p <- ifs.cf(QF$Q, QF$b)
+    if (maps[1] != "quantile") {
+     QF <- ifsp.setQF(parms$m, parms$s, parms$a, nm)
+     p <- ifsp.cf(QF$Q, QF$b)
     }
 
     if (is.function(f)) {
@@ -86,7 +86,7 @@ ifs.flex <- function(x, p, s, a, k = 5, f = NULL)
 # a  : the vector of coefficients a_i in w_i = s_i * x + a_i
 # n  : number of coefficients to be used in the IFS
 
-setQF <- function(m, s, a, n = 10)
+ifsp.setQF <- function(m, s, a, n = 10)
 {
 
  if( length(m) - 1 < n)
@@ -102,9 +102,9 @@ setQF <- function(m, s, a, n = 10)
 
 }
 
-# Calculate the coefficients of the IFS given the quadratic form
+# Calculates the coefficients of the IFS given the quadratic form
 
-ifs.cf <- function(Q, b){
+ifsp.cf <- function(Q, b){
 
     ln <- dim(Q)[1]
     w <- rep(0,ln)
@@ -125,15 +125,12 @@ ifs.cf <- function(Q, b){
 # y : the vector of observations
 # returns the coefficients a and s of w = s*x+a and the moments' vector m
 
-# y : the vector of observations
-# returns the coefficients a and s of w = s*x+a and the moments' vector m
-
-ifs.setup <-function (y,maps=c("quantile","wl1","wl2"),qtl) 
+ifsp.w.maps <-function (y,maps=c("quantile","wl1","wl2"),qtl) 
 {
    s <- NULL
    a <- NULL 
 
-   if( maps == "quantile" ) {
+   if( maps[1] == "quantile" ) {
     if(missing(qtl))
      qt <- as.numeric(c(0, quantile(y, probs = seq(0, 1, 1/(0.5 * 
         length(y)))), 1))
@@ -145,7 +142,7 @@ ifs.setup <-function (y,maps=c("quantile","wl1","wl2"),qtl)
     a <- qt[1:np]
     }
     
-    if( maps == "wl1") {
+    if( maps[1] == "wl1") {
      M <- 4
      np <- sum(2^(1:M))
      for(i in 1:M)
@@ -155,9 +152,9 @@ ifs.setup <-function (y,maps=c("quantile","wl1","wl2"),qtl)
       }
     }
     
-    if( maps == "wl2") {
+    if( maps[1] == "wl2") {
      M <- 4
-     np <- M*(m-1)/2
+     np <- M*(M-1)/2
      for(i in 2:M)
       for(j in 2:i){
         s <- c(s,1/i)
@@ -239,7 +236,7 @@ ifs.setup.FT <- function(m, p, s, a, k = 2, cutoff){
 IFS.pf.FT <- function (y, k = 2, n = 512, maps=c("quantile","wl1","wl2")) 
 {
     
-    parms <- ifs.setup(y, maps)
+    parms <- ifsp.w.maps(y, maps)
 
     a <- parms$a
     s <- parms$s
@@ -262,7 +259,7 @@ IFS.pf.FT <- function (y, k = 2, n = 512, maps=c("quantile","wl1","wl2"))
 IFS.df.FT <- function (y, k = 2, n = 512, maps=c("quantile","wl1","wl2")) 
 {
     
-    parms <- ifs.setup(y, maps)
+    parms <- ifsp.w.maps(y, maps)
 
     a <- parms$a
     s <- parms$s
@@ -281,3 +278,87 @@ IFS.df.FT <- function (y, k = 2, n = 512, maps=c("quantile","wl1","wl2"))
     yy <- ifs.df.FT(xx,b,nterms)
     return(list(x = xx, y = yy, b=b, nterms=nterms))
 }
+
+
+# IFS-M
+
+# Calculates the coefficients of the IFS-M given the quadratic 
+# form t(x) %*% Q %*% x + t(x) %*% b + d  under the constraint
+# depending on `d'
+# Q the matrix 
+# b the vector 
+# l2 the L2 norm of the function to approximate
+# d the L1 norm of the function to approximate
+
+ifsm.cf <- function(Q, b, d, l2, s, mu=1e-4){
+
+    ln <- dim(Q)[1]
+	guess <- rep(0,ln)
+
+    fr <- function(x) { 
+		tmp <- t(x) %*% Q %*% x + b %*% x +l2
+		ifelse(tmp>=0, tmp, runif(1)*1e+50)
+	}
+    gr <- function(x) 2*t(x) %*% Q + b
+    ui <- matrix(-c(s*d, s),1,ln)
+	ci <- matrix(-d,1,1)
+    sol <- constrOptim(guess, f=fr, grad=gr,ui = ui, ci=ci, mu=mu)
+    p <- sol$par
+    
+    return( list(psi=p, delta=fr(p)) )
+}
+
+
+# Used to build the quadratic form to be passed to ifsm.cf
+# in terms of the coefficients of the affine maps.
+# u  : the values of the function `u(x)' on a fixed equispaced grid
+# s  : the vector of coefficients s_i in w_i = s_i * x + a_i
+# a  : the vector of coefficients a_i in w_i = s_i * x + a_i
+
+ifsm.setQF <- function(u, s, a)
+{
+
+ if( length(s) != length(a) )
+  stop("`s' and `a' must have the same length")
+  
+ return( .Call("ifsm_setQF", u, s, a, PACKAGE = "ifs") )
+
+}
+
+# M is such that sum(2^(1:M)) maps are created
+ifsm.w.maps <- function(M=8)
+{
+	s <- NULL
+	a <- NULL
+	for(k in 1:M){
+		nw <- 2^k
+		s <- c(s,rep(1/(2^k),nw))
+		a <- c(a,(1:nw - 1)/nw)
+	}
+	return(list(a=a, s=s))
+}
+
+# the IFSM evaluated at point `x'
+# cf = (alpha, beta)
+# a, s: coefficients of the w.maps
+# k: itertaions of the IFSM operator
+
+IFSM <- function(x, cf, a, s, k = 2) {
+	if(length(a) != length(s))
+		stop("`s' and `a' must have the same length")
+	
+	if(length(cf) != 2*length(a))
+		stop("`cf' and `a', `s' have non conformable length")
+
+    T <- function(x, cf, a, s, k = k) {
+		if(k <= 0) 
+			return(x)
+		w <- (x - a)/s
+		ln <- length(cf)
+		alpha <- cf[1:(ln/2)]
+		beta <- cf[(ln/2+1):ln]
+		a2 <- sum(  (w>=0 & w <=1)*(T(w,cf,a,s,k=k-1) * alpha + beta))
+		}
+    T(x, cf, a, s, k=k)
+}
+

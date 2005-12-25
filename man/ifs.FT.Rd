@@ -1,5 +1,5 @@
 % file ifs/man/ifs.FT.Rd
-% copyright (C) 2001-2 S.M. Iacus    
+% copyright (C) 2001-5 S.M. Iacus    
 %
 \name{ifs.FT}
 \alias{ifs.FT}
@@ -56,15 +56,16 @@ IFS.df.FT(y, k = 2, n = 512, maps=c("quantile","wl1","wl2"))
  }
 \author{S. M. Iacus}
 \references{
-  S. M. Iacus and D. La Torre (2002)
-  \emph{Approximating distribution functions by iterated function systems}, JAM\&DS,
-  to appear.
+  Iacus, S.M, La Torre, D. (2005)
+  Approximating distribution functions by iterated function systems, 
+  \emph{Journal of Applied Mathematics and Decision Sciences},
+  1, 33-46.
 }
 \seealso{
 \code{\link{ecdf}}
 }
 \examples{
-library(ifs)
+require(ifs)
 
 
 nobs <- 100

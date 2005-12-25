@@ -1,15 +1,15 @@
-% file ifs/man/ifs.setup.Rd
-% copyright (C) 2001-2 S.M. Iacus    
+% file ifs/man/ifsp.w.maps.Rd
+% copyright (C) 2001-5 S.M. Iacus    
 %
-\name{ifs.setup}
-\alias{ifs.setup}
-\title{Set up the parameters for the maps of the IFS estimator}
+\name{ifsp.w.maps}
+\alias{ifsp.w.maps}
+\title{Set up the parameters for the maps of the IFSP operator}
 \description{
- This is called before calling \code{setQF} to prepear the
- parameters to be passed in \code{setQF}.
+ This is called before calling \code{ifsp.setQF} to prepare the
+ parameters to be passed in \code{ifsp.setQF}.
 }
 \usage{
-ifs.setup(y, maps = c("quantile","wl1","wl2"), qtl)
+ifsp.w.maps(y, maps = c("quantile","wl1","wl2"), qtl)
 }
 \arguments{
   \item{y}{the vector of the sample observations}

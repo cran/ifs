@@ -84,6 +84,10 @@
 #include <Rinternals.h>
 #include <R_ext/Complex.h>
 
+#define max(a, b) (a > b ? a : b) 
+#define min(a, b) (a < b ? a : b) 
+
+SEXP ifsm_setQF(SEXP X, SEXP s, SEXP a);
 
 /* IFS estimators */      
 SEXP ifs_df(SEXP x, SEXP p, SEXP s, SEXP a, SEXP k);
@@ -618,7 +622,193 @@ SEXP ifs_setQF(SEXP mu, SEXP s, SEXP a, SEXP n)
 }
 
 
+double proc(double t, double *X, int nx);
 
+
+/*
+   This function is charged to build the Quadratic Form
+   to be minimized but any optim algorithm.
+   
+   Reference:  Forte, B., Vrscay, E.R. (1994) Solving the 
+   inverse problem for function/image approximation using iterated 
+	function systems, I. Theoretical basis, Fractal, 2, 3 
+	(1994), 325-334
+   
+   Ingredients are:
+   
+   X  : the vector of simulated trajectory
+   s  : coefficientfs of the affine maps w_i = s_i x + a_i
+        here s[0] = s_1, etc. At least N terms, N < M. At
+        most M terms.        
+   a  : coefficients of the affine maps w_i = s_i x + a_i
+        here a[0] = a_1, etc. At least N terms, N < M. At
+        most M terms.        
+   N  : the dimension of the output QF, i.e. the number
+        of maps used in the IFS iterator.
+        
+   On exit, it returns the matrix (N by N) Q and the (N by 1)
+   vector b of x'Q'x + b'x 
+       
+*/
+
+SEXP ifsm_setQF(SEXP X, SEXP s, SEXP a)
+{
+  SEXP ans, names, Q, b, mids, L1, L2, M1;
+  int na, ns, n, N, i, j, ncs, nx;
+  double l2=0, l1=0, m1=0, *xx;
+  double tmin, tmax, Dt, t, S, tmp;
+
+  
+  if(!isNumeric(X)) error("`X' must be numeric");
+  if(!isNumeric(s)) error("`s' must be numeric");
+  if(!isNumeric(a)) error("`a' must be numeric");
+ 
+  PROTECT(X = AS_NUMERIC(X));
+  PROTECT(s = AS_NUMERIC(s));
+  PROTECT(a = AS_NUMERIC(a));
+  
+  nx = LENGTH(X); 
+  na = LENGTH(a);
+  ns = LENGTH(s);
+
+  if( na != ns )
+   error("`a' and `s' must have same length");
+
+  n = na;
+  N = 2*n;
+  
+  cs = NUMERIC_POINTER(s);
+  ca = NUMERIC_POINTER(a);
+  xx = NUMERIC_POINTER(X);
+
+  if( (ncs = LENGTH(s)) != LENGTH(a) )
+   error("`a' and `s' must have same length");
+  
+   PROTECT(mids = allocVector(REALSXP,nx));
+   PROTECT(ans = allocVector(VECSXP,5));
+   PROTECT(names = allocVector(STRSXP, 5));
+   SET_STRING_ELT(names, 0, mkChar("Q"));
+   SET_STRING_ELT(names, 1, mkChar("b"));
+   SET_STRING_ELT(names, 2, mkChar("L1"));
+   SET_STRING_ELT(names, 3, mkChar("L2"));
+   SET_STRING_ELT(names, 4, mkChar("M1"));
+
+   SET_VECTOR_ELT(ans, 0, PROTECT(Q = allocMatrix(REALSXP, N, N)));
+
+   for (i = 0; i < N; i++)
+    for (j = 0; j < N; j++)
+  	 REAL(Q)[i + j * N] = 0.0;
+
+   for(i=0; i<nx-1; i++){
+	tmin = 0.0;
+	tmax = 1.0;
+	Dt = (tmax-tmin)/100.0;
+	t = tmin+Dt/2.0;
+	while(t < tmax){
+		tmp = proc(t, REAL(X), nx);
+		l2 += Dt*tmp*tmp;
+		m1 += Dt*tmp;
+		l1 += Dt*fabs(tmp);
+		t += Dt;
+	}
+   }
+
+   for(i=0; i < n ; i++){
+    for(j=i; j < n ; j++){
+		tmin = max(REAL(a)[i],REAL(a)[j]);
+		tmax = min(REAL(a)[i]+REAL(s)[i],REAL(a)[j]+REAL(s)[j]);
+		Dt = (tmax-tmin)/100.0;
+		t = tmin+Dt/2.0;
+		S = 0.0;
+		while(t < tmax){
+			S += Dt*proc((t-REAL(a)[i])/REAL(s)[i], REAL(X), nx)*proc((t-REAL(a)[j])/REAL(s)[j], REAL(X), nx);
+			t += Dt;
+		}
+		REAL(Q)[i + j * N] = S;
+		REAL(Q)[j + i * N] = S;
+    }
+   }
+   
+
+   for(i=0; i < n ; i++){
+    for(j=i; j < n ; j++){
+		tmin = REAL(a)[j];
+		tmax = REAL(a)[j]+REAL(s)[j];
+		Dt = (tmax-tmin)/100.0;
+		t = tmin+Dt/2.0;
+		S = 0.0;
+		while(t < tmax){
+			S += Dt*proc((t-REAL(a)[i])/REAL(s)[i], REAL(X), nx);
+			t += Dt;
+		}
+		REAL(Q)[i + (j+n) * N] = S;
+		REAL(Q)[(n+i) + j * N] = S;
+    }
+   }
+
+   for(i=0; i < n ; i++){
+    for(j=i; j < n ; j++){
+	 if((REAL(s)[i] + REAL(a)[i] > REAL(a)[j]) & (REAL(a)[i]< REAL(a)[j]+REAL(s)[j])){
+		tmin = max(REAL(a)[i],REAL(a)[j]);
+		tmax = min(REAL(a)[i]+REAL(s)[i],REAL(a)[j]+REAL(s)[j]);
+		REAL(Q)[(n+i) + (j+n) * N] = tmax-tmin;
+	 }
+    }
+   }
+
+
+  SET_VECTOR_ELT(ans, 1, PROTECT(b = allocVector(REALSXP, N)));
+
+  for(i=0; i < N ; i++)
+   REAL(b)[i] = 0.0;
+       
+   for(i=0; i < n ; i++){
+		tmin = 0.0;
+		tmax = 1.0;
+		Dt = (tmax-tmin)/100.0;
+		t = tmin+Dt/2.0;
+		S = 0.0;
+		while(t < tmax){
+			S += Dt*proc(t, REAL(X), nx)*proc((t-REAL(a)[i])/REAL(s)[i], REAL(X), nx);
+			t += Dt;
+		}
+		REAL(b)[i] = -2*S;
+    }
+   
+	
+	for(i=0; i < n ; i++){
+		tmin = REAL(a)[i];
+		tmax = REAL(a)[i] + REAL(s)[i];
+		Dt = (tmax-tmin)/100.0;
+		t = tmin+Dt/2.0;
+		S = 0.0;
+		while(t < tmax){
+			S += Dt*proc(t, REAL(X), nx);
+			t += Dt;
+		}
+		REAL(b)[i+n] = -2*S;
+    }
+   
+
+  SET_VECTOR_ELT(ans, 2, PROTECT(L1 = allocVector(REALSXP, 1)));
+  REAL(L1)[0] = l1;
+
+  SET_VECTOR_ELT(ans, 3, PROTECT(L2 = allocVector(REALSXP, 1)));
+  REAL(L2)[0] = l2;
+  
+  SET_VECTOR_ELT(ans, 4, PROTECT(M1 = allocVector(REALSXP, 1)));
+  REAL(M1)[0] = m1;
+  setAttrib(ans, R_NamesSymbol, names);
+  
+  UNPROTECT(11);
+  return(ans);
+}
+
+double proc(double t, double *X, int nx){
+    if((t<0.0) | (t>1.0))
+	 return(0.0);
+	return( X[ (int)(round(t*(nx-1))) ] ); 
+}
 
 
 static R_CMethodDef R_CDef[] = {
@@ -626,6 +816,7 @@ static R_CMethodDef R_CDef[] = {
    {"ifs_df_flex", (DL_FUNC)&ifs_df_flex, 7},
    {"ifs_setQF", (DL_FUNC)&ifs_setQF, 4},
    {"ifs_ft", (DL_FUNC)&ifs_ft, 5},
+   {"ifsm_setQF", (DL_FUNC)&ifsm_setQF, 4},
    {NULL, NULL, 0},
 };
 
