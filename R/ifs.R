@@ -28,8 +28,6 @@ IFS <- function (y, k = 5, q = 0.5, f = NULL, n = 512, maps = c("quantile", "wl1
     }
     parms <- ifsp.w.maps(y, maps)
     nm <- parms$n
-    if (maps[1] != "quantile") 
-        nm <- 10
 
     s <- parms$s[1:nm]
     a <- parms$a[1:nm]
@@ -153,7 +151,7 @@ ifsp.w.maps <-function (y,maps=c("quantile","wl1","wl2"),qtl)
     }
     
     if( maps[1] == "wl2") {
-     M <- 4
+     M <- 8
      np <- M*(M-1)/2
      for(i in 2:M)
       for(j in 2:i){
