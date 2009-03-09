@@ -1,0 +1,14 @@
+50cc3b7d8816bb82a43e29d4f525e7bf *DESCRIPTION
+9fdfeb11f7ddba6f3aab9aaa6b1ac5dd *NAMESPACE
+1cadd57f35db8a3e86066ae347fac780 *R/ifs.R
+ac619624fd47ea056b9102e78ddd1dd0 *R/zzz.R
+45e6fb8816f297077dad1c5d44cc0510 *man/IFSM.Rd
+1f3700ab89cff8377c109b1e00edc9ce *man/ifs.FT.Rd
+a60dac66b4ac897602ce6f2a0b0d3da0 *man/ifs.Rd
+e3d8840455108f93916abbc457edec0b *man/ifsm.cf.Rd
+6ed140955bb0788bd563ba0cf6a1c2e0 *man/ifsm.setQF.Rd
+6ada22020b4725afbcb33c289c9a5a78 *man/ifsm.w.maps.Rd
+fe9084ce3dc5cea3d38a89d79f50414c *man/ifsp.cf.Rd
+21312c25609735703769f9885e3d6679 *man/ifsp.setQF.Rd
+69bd333ec4922065bff2d08ebec3ff65 *man/ifsp.w.maps.Rd
+f0029801a34b4622596fa87da3f6e257 *src/ifs.c
