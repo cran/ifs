@@ -12,7 +12,7 @@
 ifsm.w.maps(M=8)
 }
 \arguments{
-  \item{M}{M is such that sum(2\^(1:M)) maps are created}
+  \item{M}{M is such that \code{sum(2^(1:M))} maps are created}
 }
 \value{
 	A list of 
